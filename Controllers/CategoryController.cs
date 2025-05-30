@@ -148,7 +148,7 @@ namespace LTTW_Tuan6.Controllers
                     await _productRepository.DeleteAsync(product.Id); // Pass product.Id instead of product
                 }
 
-                await _categoryRepository.DeleteAsync(category);
+                await _categoryRepository.DeleteAsync(category.Id); // Pass category.Id instead of category
                 TempData["SuccessMessage"] = "Danh mục và tất cả sản phẩm liên quan đã được xóa thành công!";
             }
 

@@ -13,5 +13,6 @@ namespace LTTW_Tuan6.Repository
         Task AddAsync(Product product);
         Task UpdateAsync(Product product);
         Task DeleteAsync(int id);
+        Task<ProductImage?> GetImageByIdAsync(int id);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using LTTW_Tuan6.Models;
+using LTTW_Tuan6.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace LTTW_Tuan6.Repository
@@ -73,6 +74,11 @@ namespace LTTW_Tuan6.Repository
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<ProductImage?> GetImageByIdAsync(int id)
+        {
+            return await _context.ProductImages.FindAsync(id);
         }
     }
 }

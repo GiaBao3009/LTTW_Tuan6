@@ -10,6 +10,6 @@ namespace LTTW_Tuan6.Repository
         Task<bool> ExistsAsync(int id);
         Task AddAsync(Category category);
         Task UpdateAsync(Category category);
-        Task DeleteAsync(Category category);
+        Task DeleteAsync(int id);
     }
 }

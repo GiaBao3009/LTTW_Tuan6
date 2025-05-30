@@ -36,7 +36,7 @@
                         <div class="col-md-4 mb-3">
                             <div class="card">
                                 <img src="@image.Url" class="card-img-top" alt="Product image"
-                                     style="height: 200px; object-fit: cover;">
+                                    style="height: 200px; object-fit: cover;">
                             </div>
                         </div>
                     }
@@ -51,7 +51,9 @@
         </div>
 
         <div class="mt-4">
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Sửa</a>
+            <button type="button" class="btn btn-primary">
+                <i class="fas fa-shopping-cart"></i> Mua hàng
+            </button>
             <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
         </div>
     </div>

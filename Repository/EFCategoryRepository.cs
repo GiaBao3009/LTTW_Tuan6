@@ -1,4 +1,5 @@
-﻿using LTTW_Tuan6.Models;
+﻿using LTTW_Tuan6.Data; // Ensure this namespace matches where ApplicationDbContext is defined
+using LTTW_Tuan6.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LTTW_Tuan6.Repository
@@ -14,7 +15,9 @@ namespace LTTW_Tuan6.Repository
 
         public async Task<IEnumerable<Category>> GetAllAsync()
         {
-            return await _context.Categories.ToListAsync();
+            return await _context.Categories
+                .Include(c => c.Products)
+                .ToListAsync();
         }
 
         public async Task<Category?> GetByIdAsync(int id)
@@ -46,10 +49,14 @@ namespace LTTW_Tuan6.Repository
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(Category category)
+        public async Task DeleteAsync(int id)
         {
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
+            var category = await _context.Categories.FindAsync(id);
+            if (category != null)
+            {
+                _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

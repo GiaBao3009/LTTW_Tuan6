@@ -12,9 +12,6 @@
                     <h1 class="mb-0">
                         <i class="fas fa-boxes"></i> Danh sách sản phẩm
                     </h1>
-                    <a asp-action="Create" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Thêm sản phẩm mới
-                    </a>
                 </div>
                 <div class="card-body">
                     @if (TempData["Success"] != null)
@@ -148,21 +145,13 @@
                                                 </div>
 
                                                 <div class="action-buttons">
-                                                    <div class="btn-group w-100" role="group">
-                                                        <a asp-action="Edit" asp-route-id="@item.Id"
-                                                           class="btn btn-warning btn-sm">
-                                                            <i class="fas fa-edit"></i> Sửa
-                                                        </a>
-                                                        <a asp-action="Details" asp-route-id="@item.Id"
-                                                           class="btn btn-info btn-sm">
-                                                            <i class="fas fa-info-circle"></i> Chi tiết
-                                                        </a>
-                                                        <button type="button"
-                                                                class="btn btn-danger btn-sm"
-                                                                onclick="confirmDelete(@item.Id, '@item.Name')">
-                                                            <i class="fas fa-trash"></i> Xóa
-                                                        </button>
-                                                    </div>
+                                                    <a asp-action="Details" asp-route-id="@item.Id"
+                                                       class="btn btn-info btn-sm">
+                                                        <i class="fas fa-info-circle"></i> Chi tiết
+                                                    </a>
+                                                    <button type="button" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-shopping-cart"></i> Mua hàng
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -176,10 +165,7 @@
                                 <div class="text-center py-5">
                                     <i class="fas fa-box-open fa-5x text-muted mb-4"></i>
                                     <h3 class="text-muted">Chưa có sản phẩm nào</h3>
-                                    <p class="text-muted mb-4">Hãy thêm sản phẩm đầu tiên của bạn!</p>
-                                    <a asp-action="Create" class="btn btn-primary btn-lg">
-                                        <i class="fas fa-plus"></i> Thêm sản phẩm mới
-                                    </a>
+                                    <p class="text-muted mb-4">Hãy thêm sản phẩm đầu tiên của bạn (từ Admin)!</p>
                                 </div>
                             </div>
                         }
@@ -197,39 +183,8 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Bạn có chắc chắn muốn xóa sản phẩm "<span id="deleteProductName"></span>"?</p>
-                <p class="text-danger">Hành động này không thể hoàn tác!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <form id="deleteForm" asp-action="Delete" method="post">
-                    <input type="hidden" id="deleteProductId" name="id" />
-                    <button type="submit" class="btn btn-danger">Xóa</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script>
-        function confirmDelete(id, name) {
-            document.getElementById('deleteProductId').value = id;
-            document.getElementById('deleteProductName').textContent = name;
-            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            deleteModal.show();
-        }
-
-        // Search and Filter functionality
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
             const categoryFilter = document.getElementById('categoryFilter');
@@ -248,58 +203,60 @@
                 // Convert NodeList to Array for sorting
                 let products = Array.from(productItems);
 
-                // Filter products
-                products.forEach(product => {
-                    const name = product.dataset.name.toLowerCase();
-                    const category = product.dataset.category.toLowerCase();
-                    const price = parseFloat(product.dataset.price);
+                products.forEach(item => {
+                    const name = item.getAttribute('data-name');
+                    const category = item.getAttribute('data-category');
 
                     const matchesSearch = name.includes(searchTerm);
-                    const matchesCategory = !selectedCategory || category === selectedCategory;
+                    const matchesCategory = selectedCategory === '' || category === selectedCategory;
 
                     if (matchesSearch && matchesCategory) {
-                        product.style.display = '';
+                        item.style.display = '';
                         visibleCount++;
                     } else {
-                        product.style.display = 'none';
+                        item.style.display = 'none';
                     }
                 });
 
-                // Sort products
-                products.sort((a, b) => {
-                    const nameA = a.dataset.name;
-                    const nameB = b.dataset.name;
-                    const priceA = parseFloat(a.dataset.price);
-                    const priceB = parseFloat(b.dataset.price);
+                // Handle no results message
+                if (visibleCount === 0) {
+                    noResults.style.display = 'block';
+                } else {
+                    noResults.style.display = 'none';
+                }
 
-                    switch (sortValue) {
-                        case 'name-asc':
-                            return nameA.localeCompare(nameB);
-                        case 'name-desc':
-                            return nameB.localeCompare(nameA);
-                        case 'price-asc':
-                            return priceA - priceB;
-                        case 'price-desc':
-                            return priceB - priceA;
-                        default:
-                            return 0;
-                    }
-                });
-
-                // Reorder products in the container
-                products.forEach(product => {
-                    productsContainer.appendChild(product);
-                });
-
-                // Show/hide no results message
-                noResults.style.display = visibleCount === 0 ? '' : 'none';
+                // Apply sorting
+                sortProducts(products, sortValue);
             }
 
-            // Event listeners
+            function sortProducts(products, sortValue) {
+                products.sort((a, b) => {
+                    const nameA = a.getAttribute('data-name');
+                    const nameB = b.getAttribute('data-name');
+                    const priceA = parseFloat(a.getAttribute('data-price'));
+                    const priceB = parseFloat(b.getAttribute('data-price'));
+
+                    if (sortValue === 'name-asc') {
+                        return nameA.localeCompare(nameB);
+                    } else if (sortValue === 'name-desc') {
+                        return nameB.localeCompare(nameA);
+                    } else if (sortValue === 'price-asc') {
+                        return priceA - priceB;
+                    } else if (sortValue === 'price-desc') {
+                        return priceB - priceA;
+                    }
+                    return 0; // Default no sorting
+                });
+
+                // Re-append sorted elements
+                products.forEach(item => productsContainer.appendChild(item));
+            }
+
             searchInput.addEventListener('input', filterProducts);
             categoryFilter.addEventListener('change', filterProducts);
-            sortBy.addEventListener('change', filterProducts);
-
+            sortBy.addEventListener('change', function() {
+                filterProducts(); // Filter first, then sort the filtered subset
+            });
             clearFilters.addEventListener('click', function() {
                 searchInput.value = '';
                 categoryFilter.value = '';
@@ -307,7 +264,7 @@
                 filterProducts();
             });
 
-            // Initial filter
+            // Initial filter and sort
             filterProducts();
         });
     </script>
