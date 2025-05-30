@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LTTW_Tuan6")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+83bcb05aee0d1f06aa01d7c52a71b5ac8636ae26")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c9dc93e01c49cd8a91ffa818e62d1b16f9fa78d3")]
 [assembly: System.Reflection.AssemblyProductAttribute("LTTW_Tuan6")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LTTW_Tuan6")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
