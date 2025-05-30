@@ -1,0 +1,131 @@
+﻿@model LTTW_Tuan6.Models.Product
+
+@{
+    ViewData["Title"] = "Xóa sản phẩm";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-trash"></i> Xóa sản phẩm
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h4 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle"></i> Cảnh báo!
+                        </h4>
+                        <p class="mb-0">Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.</p>
+                    </div>
+
+                    <div class="product-details mb-4">
+                        <h5 class="card-title">@Model.Name</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="card-text">
+                                    <strong>Mã sản phẩm:</strong> @Model.Id
+                                </p>
+                                <p class="card-text">
+                                    <strong>Giá bán:</strong> @Model.Price.ToString("N0") VNĐ
+                                </p>
+                                <p class="card-text">
+                                    <strong>Danh mục:</strong> @Model.Category?.Name
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="card-text">
+                                    <strong>Mô tả:</strong>
+                                </p>
+                                <p class="card-text text-muted">
+                                    @(string.IsNullOrEmpty(Model.Description) ? "Chưa có mô tả" : Model.Description)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-images mb-4">
+                        <h5>Hình ảnh sản phẩm</h5>
+                        <div class="row">
+                            @if (Model.Images != null && Model.Images.Any())
+                            {
+                                foreach (var image in Model.Images)
+                                {
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <img src="@image.Url" class="card-img-top" alt="Product image"
+                                                 style="height: 200px; object-fit: cover;">
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Chưa có hình ảnh
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete" method="post" id="deleteForm">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger" id="deleteButton">
+                                <i class="fas fa-trash"></i> Xác nhận xóa
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#deleteForm').on('submit', function (e) {
+                e.preventDefault();
+
+                if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác!')) {
+                    $('#deleteButton').prop('disabled', true)
+                        .html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+                    this.submit();
+                }
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .product-details {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-images .card {
+            transition: transform 0.2s;
+        }
+
+            .product-images .card:hover {
+                transform: scale(1.02);
+            }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+}
