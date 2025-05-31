@@ -51,7 +51,7 @@ namespace LTTW_Tuan6.Areas.Admin.Controllers
         // GET: Admin/Products/Details/5
         public async Task<IActionResult> Details(int id)
         {
-            var product = await _productRepository.GetByIdWithCategoryAsync(id);
+            var product = await _productRepository.GetByIdWithImagesAsync(id);
             if (product == null)
             {
                 return NotFound();
@@ -176,7 +176,10 @@ namespace LTTW_Tuan6.Areas.Admin.Controllers
                             if (existingProduct.Images == null)
                                 existingProduct.Images = new List<ProductImage>();
 
-                            existingProduct.Images.AddRange(uploadResults.ProductImages);
+                            foreach (var image in uploadResults.ProductImages)
+                            {
+                                existingProduct.Images.Add(image);
+                            }
                         }
                     }
 
@@ -218,7 +221,7 @@ namespace LTTW_Tuan6.Areas.Admin.Controllers
         // GET: Admin/Products/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
-            var product = await _productRepository.GetByIdWithCategoryAsync(id);
+            var product = await _productRepository.GetByIdWithImagesAsync(id);
             if (product == null)
             {
                 return NotFound();

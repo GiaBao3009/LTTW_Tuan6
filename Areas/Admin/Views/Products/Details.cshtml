@@ -1,7 +1,9 @@
 @model LTTW_Tuan6.Models.Product
+@using System.Linq
 
 @{
     ViewData["Title"] = "Chi tiết sản phẩm";
+    var imagesList = Model.Images.ToList();
 }
 
 <div class="container-fluid px-4">
@@ -13,71 +15,166 @@
     </ol>
 
     <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-info-circle me-1"></i>
-            Thông tin chi tiết
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">
+                <i class="fas fa-info-circle"></i> Chi tiết sản phẩm: @Model.Name
+            </h2>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-4">Tên sản phẩm</dt>
-                        <dd class="col-sm-8">@Model.Name</dd>
-
-                        <dt class="col-sm-4">Danh mục</dt>
-                        <dd class="col-sm-8">@Model.Category?.Name</dd>
-
-                        <dt class="col-sm-4">Giá</dt>
-                        <dd class="col-sm-8">@Model.Price.ToString("N0") đ</dd>
-
-                        <dt class="col-sm-4">Mô tả</dt>
-                        <dd class="col-sm-8">@Model.Description</dd>
-                    </dl>
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+            }
+
+            <div class="row">
+                <!-- Product Images -->
                 <div class="col-md-6">
-                    @if (Model.Images != null && Model.Images.Any())
-                    {
-                        <div id="productImages" class="carousel slide" data-bs-ride="carousel">
-                            <div class="carousel-inner">
-                                @for (int i = 0; i < Model.Images.Count; i++)
+                    <div class="product-images">
+                        @if (Model.Images != null && Model.Images.Any())
+                        {
+                            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    @for (int i = 0; i < imagesList.Count; i++)
+                                    {
+                                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                                            <img src="@imagesList[i].Url" class="d-block w-100 carousel-image"
+                                                alt="@Model.Name" onerror="this.src='/images/no-image.png'">
+                                        </div>
+                                    }
+                                </div>
+                                @if (imagesList.Count > 1)
                                 {
-                                    <div class="carousel-item @(i == 0 ? "active" : "")">
-                                        <img src="@Model.Images[i].Url" class="d-block w-100" alt="@Model.Name"
-                                            style="height: 400px; object-fit: cover;">
+                                    <button class="carousel-control-prev" type="button"
+                                        data-bs-target="#productCarousel" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button"
+                                        data-bs-target="#productCarousel" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                }
+
+                                <!-- Carousel Indicators -->
+                                <div class="carousel-indicators">
+                                    @for (int i = 0; i < imagesList.Count; i++)
+                                    {
+                                        <button type="button" data-bs-target="#productCarousel"
+                                            data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"
+                                            aria-current="@(i == 0 ? "true" : "false")"
+                                            aria-label="Slide @(i + 1)"></button>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Thumbnail Navigation -->
+                            <div class="row mt-3">
+                                @for (int i = 0; i < imagesList.Count; i++)
+                                {
+                                    <div class="col-3 mb-3">
+                                        <img src="@imagesList[i].Url" class="img-thumbnail thumbnail-image"
+                                            alt="@Model.Name" data-slide-to="@i"
+                                            onerror="this.src='/images/no-image.png'"
+                                            onclick="$('#productCarousel').carousel(@i)">
                                     </div>
                                 }
                             </div>
-                            @if (Model.Images.Count > 1)
-                            {
-                                <button class="carousel-control-prev" type="button" data-bs-target="#productImages"
-                                    data-bs-slide="prev">
-                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Previous</span>
-                                </button>
-                                <button class="carousel-control-next" type="button" data-bs-target="#productImages"
-                                    data-bs-slide="next">
-                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Next</span>
-                                </button>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <img src="/images/no-image.png" class="img-fluid" alt="No image"
-                            style="height: 400px; object-fit: cover;">
-                    }
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Sản phẩm chưa có hình ảnh.
+                            </div>  
+                            <div class="no-image-placeholder">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                                <p class="text-muted mt-2">Không có hình ảnh</p>
+                            </div>
+                        }
+                    </div>
                 </div>
-            </div>
 
-            <div class="mt-4">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> Chỉnh sửa
-                </a>
-                <a asp-action="Index" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Quay lại
-                </a>
+                <!-- Product Details -->
+                <div class="col-md-6">
+                    <div class="product-details">
+                        <h3 class="mb-3">@Model.Name</h3>
+
+                        <div class="mb-3">
+                            <h4 class="text-primary price-display">
+                                @Model.Price.ToString("N0") VNĐ
+                            </h4>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Danh mục:</strong>
+                            <span class="badge bg-info ms-2">
+                                @(Model.Category?.Name ?? "Chưa phân loại")
+                            </span>
+                        </div>
+    
+                        <div class="mb-3">
+                            <strong>Mô tả:</strong>
+                            <div class="mt-2 description-text">
+                                @if (!string.IsNullOrEmpty(Model.Description))
+                                {
+                                    @Html.Raw(Model.Description.Replace("\n", "<br/>"))
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có mô tả</span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Chỉnh sửa
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i> Xóa
+                            </a>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize carousel
+            const carousel = document.querySelector('#productCarousel');
+            if (carousel) {
+                const bootstrapCarousel = new bootstrap.Carousel(carousel);
+
+                // Handle thumbnail clicks
+                const thumbnails = document.querySelectorAll('.thumbnail-image');
+                thumbnails.forEach(function (thumbnail, index) {
+                    thumbnail.addEventListener('click', function () {
+                        bootstrapCarousel.to(index);
+                    });
+                });
+            }
+
+            // Auto-dismiss alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(function (alert) {
+                setTimeout(function () {
+                    if (alert && alert.parentNode) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                }, 5000);
+            });
+        });
+    </script>
+}

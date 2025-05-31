@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Http;
 
 namespace LTTW_Tuan6.Models
 {
@@ -26,15 +27,23 @@ namespace LTTW_Tuan6.Models
         [DisplayName("Giá bán")]
         public decimal Price { get; set; }
 
-        [DisplayName("Hình ảnh sản phẩm")]
-        public List<ProductImage> Images { get; set; } = new();
-
         [Required(ErrorMessage = "Vui lòng chọn danh mục")]
         [ForeignKey("Category")]
         [DisplayName("Mã danh mục")]
         public int CategoryId { get; set; }
 
         [DisplayName("Danh mục")]
-        public Category? Category { get; set; }
+        public virtual Category? Category { get; set; }
+
+        [DisplayName("Hình ảnh sản phẩm")]
+        public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+
+        [NotMapped]
+        [DisplayName("URL hình ảnh")]
+        public string? ImageUrl { get; set; }
+
+        [NotMapped]
+        [DisplayName("Tệp hình ảnh")]
+        public IFormFile? ImageFile { get; set; }
     }
 }

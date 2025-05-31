@@ -53,7 +53,8 @@
                         <div class="form-group">
                             <label class="control-label">Thêm hình ảnh</label>
                             <input type="file" name="images" class="form-control" multiple accept="image/*" />
-                            <small class="text-muted">Có thể chọn nhiều ảnh. Định dạng: JPG, JPEG, PNG, GIF, WEBP. Tối đa 5MB/ảnh.</small>
+                            <small class="text-muted">Có thể chọn nhiều ảnh. Định dạng: JPG, JPEG, PNG, GIF, WEBP. Tối
+                                đa 5MB/ảnh.</small>
                         </div>
                     </div>
                 </div>
@@ -73,12 +74,14 @@
                             {
                                 <div class="col-md-3 mb-3">
                                     <div class="card">
-                                        <img src="@image.Url" class="card-img-top" alt="@Model.Name" style="height: 200px; object-fit: cover;">
+                                        <img src="@image.Url" class="card-img-top" alt="@Model.Name"
+                                            style="height: 200px; object-fit: cover;">
                                         <div class="card-body">
                                             <form asp-action="DeleteImage" method="post" class="d-inline">
                                                 <input type="hidden" name="imageId" value="@image.Id" />
                                                 <input type="hidden" name="productId" value="@Model.Id" />
-                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa hình ảnh này?');">
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Bạn có chắc chắn muốn xóa hình ảnh này?');">
                                                     <i class="fas fa-trash"></i> Xóa
                                                 </button>
                                             </form>
@@ -104,5 +107,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-} 
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -56,6 +56,223 @@ namespace LTTW_Tuan6.Controllers
             return View(product);
         }
 
+        // GET: Product/Create
+        public async Task<IActionResult> Create()
+        {
+            try
+            {
+                var categories = await _categoryRepository.GetAllAsync();
+                ViewBag.Categories = new SelectList(categories, "Id", "Name");
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading categories for product creation");
+                TempData["Error"] = "Có lỗi xảy ra khi tải danh sách danh mục.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: Product/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Product product, IFormFileCollection images)
+        {
+            // Validate number of images
+            if (images != null && images.Count > 10)
+            {
+                ModelState.AddModelError("", "Chỉ được phép tải lên tối đa 10 hình ảnh.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Process uploaded images
+                    if (images != null && images.Count > 0)
+                    {
+                        var uploadResult = await ProcessUploadedImages(images);
+                        if (uploadResult.HasErrors)
+                        {
+                            foreach (var error in uploadResult.Errors)
+                            {
+                                ModelState.AddModelError("", error);
+                            }
+                            var categories = await _categoryRepository.GetAllAsync();
+                            ViewBag.Categories = new SelectList(categories, "Id", "Name", product.CategoryId);
+                            return View(product);
+                        }
+                        product.Images = uploadResult.ProductImages;
+                    }
+
+                    await _productRepository.AddAsync(product);
+                    TempData["Success"] = "Sản phẩm đã được tạo thành công!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating product");
+                    ModelState.AddModelError("", "Có lỗi xảy ra khi tạo sản phẩm.");
+                }
+            }
+
+            var categoriesForView = await _categoryRepository.GetAllAsync();
+            ViewBag.Categories = new SelectList(categoriesForView, "Id", "Name", product.CategoryId);
+            return View(product);
+        }
+
+        // GET: Product/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            try
+            {
+                var product = await _productRepository.GetByIdWithCategoryAsync(id);
+                if (product == null)
+                {
+                    return NotFound();
+                }
+
+                var categories = await _categoryRepository.GetAllAsync();
+                ViewBag.Categories = new SelectList(categories, "Id", "Name", product.CategoryId);
+                return View(product);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading product {ProductId} for editing", id);
+                TempData["Error"] = "Có lỗi xảy ra khi tải thông tin sản phẩm.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: Product/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Product product, IFormFileCollection images)
+        {
+            if (id != product.Id)
+            {
+                return NotFound();
+            }
+
+            // Get current product to check existing images count
+            var existingProduct = await _productRepository.GetByIdWithCategoryAsync(id);
+            if (existingProduct == null)
+            {
+                return NotFound();
+            }
+
+            // Validate total images (existing + new)
+            int existingImagesCount = existingProduct.Images?.Count ?? 0;
+            int newImagesCount = images?.Count ?? 0;
+            int totalImages = existingImagesCount + newImagesCount;
+
+            if (totalImages > 10)
+            {
+                ModelState.AddModelError("", $"Tổng số hình ảnh không được vượt quá 10. Hiện tại có {existingImagesCount} ảnh, bạn chỉ có thể thêm tối đa {10 - existingImagesCount} ảnh nữa.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Process new uploaded images
+                    if (images != null && images.Count > 0)
+                    {
+                        var uploadResult = await ProcessUploadedImages(images);
+                        if (uploadResult.HasErrors)
+                        {
+                            foreach (var error in uploadResult.Errors)
+                            {
+                                ModelState.AddModelError("", error);
+                            }
+                            var categories = await _categoryRepository.GetAllAsync();
+                            ViewBag.Categories = new SelectList(categories, "Id", "Name", product.CategoryId);
+                            return View(product);
+                        }
+
+                        // Add new images to existing product
+                        foreach (var newImage in uploadResult.ProductImages)
+                        {
+                            newImage.ProductId = id;
+                            existingProduct.Images.Add(newImage);
+                        }
+                    }
+
+                    // Update product properties
+                    existingProduct.Name = product.Name;
+                    existingProduct.Description = product.Description;
+                    existingProduct.Price = product.Price;
+                    existingProduct.CategoryId = product.CategoryId;
+
+                    await _productRepository.UpdateAsync(existingProduct);
+                    TempData["Success"] = "Sản phẩm đã được cập nhật thành công!";
+                    return RedirectToAction(nameof(Details), new { id = id });
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await ProductExists(product.Id))
+                    {
+                        return NotFound();
+                    }
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating product {ProductId}", id);
+                    ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật sản phẩm.");
+                }
+            }
+
+            var categoriesForView = await _categoryRepository.GetAllAsync();
+            ViewBag.Categories = new SelectList(categoriesForView, "Id", "Name", product.CategoryId);
+            return View(existingProduct);
+        }
+
+        // GET: Product/Delete/5
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var product = await _productRepository.GetByIdWithCategoryAsync(id);
+                if (product == null)
+                {
+                    return NotFound();
+                }
+                return View(product);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading product {ProductId} for deletion", id);
+                TempData["Error"] = "Có lỗi xảy ra khi tải thông tin sản phẩm.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: Product/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            try
+            {
+                var product = await _productRepository.GetByIdWithCategoryAsync(id);
+                if (product != null)
+                {
+                    // Delete associated images first
+                    await DeleteProductImages(product.Images);
+                    await _productRepository.DeleteAsync(id);
+                    TempData["Success"] = "Sản phẩm đã được xóa thành công!";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting product {ProductId}", id);
+                TempData["Error"] = "Có lỗi xảy ra khi xóa sản phẩm.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         // DELETE: Product/DeleteImage/5
         [HttpPost]
         [ValidateAntiForgeryToken]

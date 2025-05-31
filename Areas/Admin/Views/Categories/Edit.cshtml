@@ -1,37 +1,109 @@
-@model LTTW_Tuan6.Models.Category
+@model LTTW_Tuan6.Models.Product
 
 @{
-    ViewData["Title"] = "Chỉnh sửa danh mục";
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
 }
 
 <div class="container-fluid px-4">
     <h1 class="mt-4">@ViewData["Title"]</h1>
     <ol class="breadcrumb mb-4">
         <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Dashboard</a></li>
-        <li class="breadcrumb-item"><a asp-action="Index">Danh mục</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Sản phẩm</a></li>
         <li class="breadcrumb-item active">Chỉnh sửa</li>
     </ol>
 
     <div class="card mb-4">
         <div class="card-header">
             <i class="fas fa-edit me-1"></i>
-            Chỉnh sửa danh mục
+            Chỉnh sửa sản phẩm
         </div>
         <div class="card-body">
-            <form asp-action="Edit">
+            <form asp-action="Edit" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="Id" />
 
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label">Tên sản phẩm</label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="CategoryId" class="control-label">Danh mục</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Price" class="control-label">Giá</label>
+                            <input asp-for="Price" class="form-control" type="number" min="0" step="1000" />
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group mb-3">
-                    <label asp-for="Name" class="control-label">Tên danh mục</label>
-                    <input asp-for="Name" class="form-control" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
+                    <label asp-for="Description" class="control-label">Mô tả</label>
+                    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <!-- Existing Images Section -->
+                @if (Model.Images != null && Model.Images.Any())
+                {
+                    <div class="form-group mb-4">
+                        <label class="control-label">Hình ảnh hiện tại (<span
+                                id="currentImageCount">@Model.Images.Count()</span>/10)</label>
+                        <div class="row" id="existingImages">
+                            @foreach (var image in Model.Images)
+                            {
+                                <div class="col-md-3 col-sm-4 col-6 mb-3" data-image-id="@image.Id">
+                                    <div class="card">
+                                        <img src="@image.Url" class="card-img-top" style="height: 150px; object-fit: cover;"
+                                            alt="Product image">
+                                        <div class="card-body p-2">
+                                            <button type="button" class="btn btn-danger btn-sm w-100 delete-image-btn"
+                                                data-image-id="@image.Id" data-product-id="@Model.Id">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Add New Images Section -->
+                <div class="form-group mb-3">
+                    <label class="control-label">Thêm hình ảnh mới</label>
+                    <input type="file" name="images" id="imageInput" class="form-control" multiple accept="image/*" />
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Chọn thêm ảnh mới. Tối đa <span id="maxNewImages">@(10 - (Model.Images?.Count() ?? 0))</span>
+                        ảnh.
+                        Định dạng: JPG, JPEG, PNG, GIF, WEBP. Tối đa 5MB/ảnh.
+                    </small>
+                    <div id="imagePreview" class="mt-2"></div>
+                    <div id="imageCounter" class="mt-1 text-info"></div>
                 </div>
 
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Lưu thay đổi
                     </button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                        <i class="fas fa-eye"></i> Xem chi tiết
+                    </a>
                     <a asp-action="Index" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Quay lại
                     </a>
@@ -41,8 +113,357 @@
     </div>
 </div>
 
+<!-- Delete Image Modal -->
+<div class="modal fade" id="deleteImageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa hình ảnh</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa hình ảnh này không?</p>
+                <p class="text-danger"><small>Hành động này không thể hoàn tác!</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const imageInput = document.getElementById('imageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const imageCounter = document.getElementById('imageCounter');
+            const currentImageCount = document.getElementById('currentImageCount');
+            const maxNewImagesSpan = document.getElementById('maxNewImages');
+
+            let currentImagesCount = parseInt(currentImageCount.textContent);
+            const maxTotalImages = 10;
+            const maxFileSize = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+            // Update max new images count
+            function updateMaxNewImages() {
+                const maxNew = maxTotalImages - currentImagesCount;
+                maxNewImagesSpan.textContent = maxNew;
+
+                if (maxNew <= 0) {
+                    imageInput.disabled = true;
+                    imageInput.parentNode.querySelector('small').innerHTML =
+                        '<i class="fas fa-info-circle text-warning"></i> Đã đạt giới hạn tối đa 10 hình ảnh. Vui lòng xóa bớt ảnh cũ để thêm ảnh mới.';
+                } else {
+                    imageInput.disabled = false;
+                }
+            }
+
+            updateMaxNewImages();
+
+            // Handle new image selection
+            imageInput.addEventListener('change', function (e) {
+                const files = Array.from(e.target.files);
+                handleImageSelection(files);
+            });
+
+            function handleImageSelection(files) {
+                imagePreview.innerHTML = '';
+
+                const maxNewImages = maxTotalImages - currentImagesCount;
+
+                if (files.length > maxNewImages) {
+                    showError(`Chỉ được chọn tối đa ${maxNewImages} hình ảnh mới!`);
+                    imageInput.value = '';
+                    updateCounter(0);
+                    return;
+                }
+
+                if (files.length === 0) {
+                    updateCounter(0);
+                    return;
+                }
+
+                let validFiles = [];
+                let hasError = false;
+
+                files.forEach((file, index) => {
+                    if (!allowedTypes.includes(file.type)) {
+                        showError(`File "${file.name}" không đúng định dạng. Chỉ chấp nhận: JPG, JPEG, PNG, GIF, WEBP`);
+                        hasError = true;
+                        return;
+                    }
+
+                    if (file.size > maxFileSize) {
+                        showError(`File "${file.name}" vượt quá kích thước cho phép (5MB)`);
+                        hasError = true;
+                        return;
+                    }
+
+                    validFiles.push(file);
+                });
+
+                if (hasError) {
+                    imageInput.value = '';
+                    updateCounter(0);
+                    return;
+                }
+
+                showImagePreviews(validFiles);
+                updateCounter(validFiles.length);
+            }
+
+            function showImagePreviews(files) {
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'row';
+
+                files.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-3 col-sm-4 col-6 mb-2';
+
+                        col.innerHTML = `
+                                <div class="card border-success">
+                                    <img src="${e.target.result}" class="card-img-top" style="height: 100px; object-fit: cover;" alt="Preview ${index + 1}">
+                                    <div class="card-body p-1">
+                                        <small class="text-success"><i class="fas fa-plus"></i> ${file.name}</small>
+                                    </div>
+                                </div>
+                            `;
+
+                        previewContainer.appendChild(col);
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                imagePreview.appendChild(previewContainer);
+            }
+
+            function updateCounter(count) {
+                if (count === 0) {
+                    imageCounter.innerHTML = '';
+                } else {
+                    const totalAfterAdd = currentImagesCount + count;
+                    imageCounter.innerHTML = `
+                            <i class="fas fa-images text-success"></i> 
+                            Sẽ thêm ${count} ảnh mới (Tổng: ${totalAfterAdd}/${maxTotalImages})
+                        `;
+                }
+            }
+
+            function showError(message) {
+                const existingAlert = document.querySelector('.image-error-alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-danger alert-dismissible fade show image-error-alert mt-2';
+                alert.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i> ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+
+                imageInput.parentNode.appendChild(alert);
+
+                // Auto hide after 5 seconds
+                setTimeout(() => {
+                    if (alert && alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+
+            // Handle delete image buttons
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteImageModal'));
+            let imageToDelete = null;
+
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('delete-image-btn') || e.target.closest('.delete-image-btn')) {
+                    const btn = e.target.classList.contains('delete-image-btn') ? e.target : e.target.closest('.delete-image-btn');
+                    imageToDelete = {
+                        id: btn.getAttribute('data-image-id'),
+                        productId: btn.getAttribute('data-product-id'),
+                        element: btn.closest('[data-image-id]')
+                    };
+                    deleteModal.show();
+                }
+            });
+
+            // Confirm delete image
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                if (!imageToDelete) return;
+
+                const deleteBtn = this;
+                const originalText = deleteBtn.innerHTML;
+
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xóa...';
+                deleteBtn.disabled = true;
+
+                // AJAX call to delete image
+                fetch(`/Admin/Product/DeleteImage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        imageId: imageToDelete.id,
+                        productId: imageToDelete.productId
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove image element from DOM
+                            imageToDelete.element.remove();
+
+                            // Update counters
+                            currentImagesCount--;
+                            currentImageCount.textContent = currentImagesCount;
+                            updateMaxNewImages();
+
+                            // Update preview counter if files are selected
+                            const selectedFiles = imageInput.files;
+                            if (selectedFiles.length > 0) {
+                                updateCounter(selectedFiles.length);
+                            }
+
+                            deleteModal.hide();
+
+                            // Show success message
+                            showSuccessMessage('Đã xóa hình ảnh thành công!');
+                        } else {
+                            showError(data.message || 'Có lỗi xảy ra khi xóa hình ảnh!');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showError('Có lỗi xảy ra khi xóa hình ảnh!');
+                    })
+                    .finally(() => {
+                        deleteBtn.innerHTML = originalText;
+                        deleteBtn.disabled = false;
+                        imageToDelete = null;
+                    });
+            });
+
+            function showSuccessMessage(message) {
+                const existingAlert = document.querySelector('.success-alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show success-alert';
+                alert.innerHTML = `
+                        <i class="fas fa-check-circle"></i> ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+
+                document.querySelector('.card-body').insertBefore(alert, document.querySelector('.card-body').firstChild);
+
+                // Auto hide after 3 seconds
+                setTimeout(() => {
+                    if (alert && alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 3000);
+            }
+
+            // Form validation before submit
+            document.querySelector('form').addEventListener('submit', function (e) {
+                const name = document.querySelector('input[name="Name"]').value.trim();
+                const categoryId = document.querySelector('select[name="CategoryId"]').value;
+                const price = document.querySelector('input[name="Price"]').value;
+
+                if (!name) {
+                    showError('Vui lòng nhập tên sản phẩm!');
+                    document.querySelector('input[name="Name"]').focus();
+                    e.preventDefault();
+                    return;
+                }
+
+                if (!categoryId) {
+                    showError('Vui lòng chọn danh mục sản phẩm!');
+                    document.querySelector('select[name="CategoryId"]').focus();
+                    e.preventDefault();
+                    return;
+                }
+
+                if (!price || price <= 0) {
+                    showError('Vui lòng nhập giá sản phẩm hợp lệ!');
+                    document.querySelector('input[name="Price"]').focus();
+                    e.preventDefault();
+                    return;
+                }
+
+                // Show loading state
+                const submitBtn = document.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+                submitBtn.disabled = true;
+
+                // Re-enable after 10 seconds as fallback
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 10000);
+            });
+
+            // Drag and drop functionality
+            const dropZone = document.querySelector('.form-group:has(#imageInput)');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropZone.classList.add('border-primary', 'bg-light');
+            }
+
+            function unhighlight() {
+                dropZone.classList.remove('border-primary', 'bg-light');
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = Array.from(dt.files).filter(file => file.type.startsWith('image/'));
+
+                if (files.length > 0) {
+                    // Set files to input
+                    const fileList = new DataTransfer();
+                    files.forEach(file => fileList.items.add(file));
+                    imageInput.files = fileList.files;
+
+                    // Trigger change event
+                    imageInput.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+    </script>
 }

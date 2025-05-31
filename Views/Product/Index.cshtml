@@ -37,7 +37,8 @@
                                 <span class="input-group-text">
                                     <i class="fas fa-search"></i>
                                 </span>
-                                <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo tên sản phẩm...">
+                                <input type="text" class="form-control" id="searchInput"
+                                    placeholder="Tìm kiếm theo tên sản phẩm...">
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -76,83 +77,39 @@
                         {
                             foreach (var item in Model)
                             {
-                                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 product-item"
-                                     data-name="@item.Name?.ToLower()"
-                                     data-category="@item.Category?.Name"
-                                     data-price="@item.Price">
+                                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 product-item" data-name="@item.Name?.ToLower()"
+                                    data-category="@item.Category?.Name" data-price="@item.Price">
                                     <div class="card h-100 product-card">
-                                        <div class="image-container">
+                                        <div class="product-image">
                                             @if (item.Images != null && item.Images.Any())
                                             {
-                                                <img src="@item.Images.First().Url"
-                                                     class="card-img-top product-image"
-                                                     alt="@item.Name"
-                                                     loading="lazy"
-                                                     onerror="this.src='/images/no-image.jpg'">
-
-                                                @if (item.Images.Count > 1)
-                                                {
-                                                    <div class="image-count">
-                                                        <i class="fas fa-images"></i> @item.Images.Count
-                                                    </div>
-                                                }
+                                                <img src="@item.Images.First().Url" class="card-img-top" alt="@item.Name">
                                             }
                                             else
                                             {
-                                                <img src="/images/no-image.jpg"
-                                                     class="card-img-top product-image"
-                                                     alt="No image"
-                                                     loading="lazy">
+                                                <div class="no-image">
+                                                    <i class="fas fa-image"></i>
+                                                    <span>Không có hình ảnh</span>
+                                                </div>
                                             }
-
-                                            <!-- Quick Actions Overlay -->
-                                            <div class="quick-actions">
-                                                <a asp-action="Details" asp-route-id="@item.Id"
-                                                   class="btn btn-sm btn-outline-light"
-                                                   title="Xem chi tiết">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </div>
                                         </div>
-
-                                        <div class="card-body d-flex flex-column">
-                                            <h5 class="card-title text-truncate" title="@item.Name">
-                                                @item.Name
-                                            </h5>
-
-                                            <p class="card-text description-text">
-                                                @if (!string.IsNullOrEmpty(item.Description))
-                                                {
-                                                    @(item.Description.Length > 100 ? item.Description.Substring(0, 100) + "..." : item.Description)
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">Chưa có mô tả</span>
-                                                }
+                                        <div class="card-body">
+                                            <h5 class="card-title text-truncate" title="@item.Name">@item.Name</h5>
+                                            <p class="card-text text-primary fw-bold">@item.Price.ToString("N0") VNĐ</p>
+                                            <p class="card-text">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-tag"></i> @item.Category?.Name
+                                                </small>
                                             </p>
-
-                                            <div class="mt-auto">
-                                                <div class="price-section mb-3">
-                                                    <h4 class="price-text mb-1">
-                                                        @item.Price.ToString("N0") VNĐ
-                                                    </h4>
-                                                    @if (item.Category != null)
-                                                    {
-                                                        <small class="text-muted">
-                                                            <i class="fas fa-tag"></i> @item.Category.Name
-                                                        </small>
-                                                    }
-                                                </div>
-
-                                                <div class="action-buttons">
-                                                    <a asp-action="Details" asp-route-id="@item.Id"
-                                                       class="btn btn-info btn-sm">
-                                                        <i class="fas fa-info-circle"></i> Chi tiết
-                                                    </a>
-                                                    <button type="button" class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-shopping-cart"></i> Mua hàng
-                                                    </button>
-                                                </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="btn-group w-100">
+                                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">
+                                                    <i class="fas fa-info-circle"></i> Chi tiết
+                                                </a>
+                                                <button class="btn btn-success" onclick="addToCart(@item.Id)">
+                                                    <i class="fas fa-shopping-cart"></i> Mua hàng
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -185,7 +142,7 @@
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('searchInput');
             const categoryFilter = document.getElementById('categoryFilter');
             const sortBy = document.getElementById('sortBy');
@@ -254,10 +211,10 @@
 
             searchInput.addEventListener('input', filterProducts);
             categoryFilter.addEventListener('change', filterProducts);
-            sortBy.addEventListener('change', function() {
+            sortBy.addEventListener('change', function () {
                 filterProducts(); // Filter first, then sort the filtered subset
             });
-            clearFilters.addEventListener('click', function() {
+            clearFilters.addEventListener('click', function () {
                 searchInput.value = '';
                 categoryFilter.value = '';
                 sortBy.value = 'name-asc';
@@ -266,6 +223,12 @@
 
             // Initial filter and sort
             filterProducts();
+
+            // Add to cart function
+            window.addToCart = function (productId) {
+                // TODO: Implement add to cart functionality
+                alert('Chức năng mua hàng đang được phát triển!');
+            }
         });
     </script>
 }
@@ -273,79 +236,65 @@
 @section Styles {
     <style>
         .product-card {
-            transition: transform 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-            .product-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            }
-
-        .image-container {
-            position: relative;
-            overflow: hidden;
-            padding-top: 75%; /* 4:3 Aspect Ratio */
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .product-image {
-            position: absolute;
-            top: 0;
-            left: 0;
+            height: 200px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .product-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
         }
 
-        .image-count {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
+        .product-card:hover .product-image img {
+            transform: scale(1.1);
         }
 
-        .quick-actions {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
+        .no-image {
+            height: 100%;
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
+            color: #6c757d;
+            background: #f8f9fa;
         }
 
-        .image-container:hover .quick-actions {
-            opacity: 1;
+        .no-image i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
         }
 
-        .description-text {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 1rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        .card-footer {
+            border-top: none;
+            padding: 1rem;
         }
 
-        .price-text {
-            color: #e74c3c;
-            font-weight: bold;
+        .btn-group .btn {
+            border-radius: 0;
         }
 
-        .action-buttons .btn {
-            font-size: 0.8rem;
+        .btn-group .btn:first-child {
+            border-top-left-radius: 0.25rem;
+            border-bottom-left-radius: 0.25rem;
         }
 
-            .action-buttons .btn i {
-                margin-right: 4px;
-            }
+        .btn-group .btn:last-child {
+            border-top-right-radius: 0.25rem;
+            border-bottom-right-radius: 0.25rem;
+        }
     </style>
 }
